@@ -1,2 +1,28 @@
+# binary
 tsopencode
+tsopencode-*
+
+# build output
 dist/
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+coverage.out
+
+# environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# macOS
+.DS_Store
+
+# tsnet state (if someone runs locally)
+tsnet-state/
