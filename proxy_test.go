@@ -14,12 +14,27 @@ func TestIsWebSocket(t *testing.T) {
 		t.Fatal("plain request should not be websocket")
 	}
 	req.Header.Set("Upgrade", "websocket")
+	req.Header.Set("Connection", "Upgrade")
 	if !isWebSocket(req) {
-		t.Fatal("request with Upgrade: websocket should be websocket")
+		t.Fatal("request with Upgrade: websocket and Connection: Upgrade should be websocket")
 	}
 	req.Header.Set("Upgrade", "WebSocket")
 	if !isWebSocket(req) {
 		t.Fatal("Upgrade header check should be case-insensitive")
+	}
+
+	req2 := httptest.NewRequest("GET", "/", nil)
+	req2.Header.Set("Upgrade", "websocket")
+	// No Connection: Upgrade header — should NOT be treated as WebSocket
+	if isWebSocket(req2) {
+		t.Fatal("request without Connection: Upgrade should not be websocket")
+	}
+
+	req3 := httptest.NewRequest("GET", "/", nil)
+	req3.Header.Set("Upgrade", "websocket")
+	req3.Header.Set("Connection", "Upgrade")
+	if !isWebSocket(req3) {
+		t.Fatal("request with both headers should be websocket")
 	}
 }
 

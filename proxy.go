@@ -8,6 +8,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"strings"
+	"time"
 )
 
 func newProxy(port int) http.Handler {
@@ -26,11 +27,12 @@ func newProxy(port int) http.Handler {
 }
 
 func isWebSocket(r *http.Request) bool {
-	return strings.EqualFold(r.Header.Get("Upgrade"), "websocket")
+	return strings.EqualFold(r.Header.Get("Upgrade"), "websocket") &&
+		strings.Contains(strings.ToLower(r.Header.Get("Connection")), "upgrade")
 }
 
 func proxyWebSocket(w http.ResponseWriter, r *http.Request, target string) {
-	dst, err := net.Dial("tcp", target)
+	dst, err := net.DialTimeout("tcp", target, 5*time.Second)
 	if err != nil {
 		http.Error(w, "upstream unavailable", http.StatusBadGateway)
 		return
@@ -55,5 +57,6 @@ func proxyWebSocket(w http.ResponseWriter, r *http.Request, target string) {
 	done := make(chan struct{}, 2)
 	go func() { io.Copy(dst, src); done <- struct{}{} }()
 	go func() { io.Copy(src, dst); done <- struct{}{} }()
+	<-done
 	<-done
 }
