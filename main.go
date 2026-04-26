@@ -16,11 +16,22 @@ import (
 var Version = "dev"
 
 func main() {
+	subcommand := ""
+	if len(os.Args) > 1 && os.Args[1] == "status" {
+		subcommand = "status"
+		os.Args = append(os.Args[:1], os.Args[2:]...)
+	}
+
 	authKey := flag.String("authkey", os.Getenv("TS_AUTHKEY"), "Tailscale auth key for headless registration")
 	hostname := flag.String("hostname", envOr("TSOPENCODE_HOSTNAME", "opencode"), "Tailscale node name")
 	stateDir := flag.String("state-dir", envOr("TSOPENCODE_STATE_DIR", defaultStateDir()), "base dir for tsnet state")
 	opencodeBin := flag.String("opencode-bin", "opencode", "path to opencode binary")
 	flag.Parse()
+
+	if subcommand == "status" {
+		runStatus(*stateDir)
+		return
+	}
 
 	port, err := freePort()
 	if err != nil {
@@ -64,6 +75,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("tsnet listen http: %v", err)
 	}
+
+	writeURL(*stateDir, dnsName)
 
 	proxy := newProxy(port)
 	srv := &http.Server{Handler: proxy}
