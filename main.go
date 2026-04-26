@@ -16,31 +16,11 @@ import (
 var Version = "dev"
 
 func main() {
-	// detect subcommands before flag parsing
-	var subcommand string
-	if len(os.Args) > 1 && (os.Args[1] == "install" || os.Args[1] == "uninstall") {
-		subcommand = os.Args[1]
-		os.Args = append(os.Args[:1], os.Args[2:]...)
-	}
-
 	authKey := flag.String("authkey", os.Getenv("TS_AUTHKEY"), "Tailscale auth key for headless registration")
 	hostname := flag.String("hostname", envOr("TSOPENCODE_HOSTNAME", "opencode"), "Tailscale node name")
 	stateDir := flag.String("state-dir", envOr("TSOPENCODE_STATE_DIR", defaultStateDir()), "base dir for tsnet state")
 	opencodeBin := flag.String("opencode-bin", "opencode", "path to opencode binary")
 	flag.Parse()
-
-	switch subcommand {
-	case "uninstall":
-		if err := uninstallService(); err != nil {
-			log.Fatalf("uninstall: %v", err)
-		}
-		return
-	case "install":
-		if err := installService(*authKey, *hostname, *stateDir, *opencodeBin); err != nil {
-			log.Fatalf("install: %v", err)
-		}
-		return
-	}
 
 	port, err := freePort()
 	if err != nil {

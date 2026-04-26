@@ -46,7 +46,7 @@ changelog:
       - "^docs:"
       - "^test:"
 
-brews:
+homebrew_casks:
   - name: tsopencode
     ids:
       - tsopencode
@@ -54,10 +54,22 @@ brews:
       owner: rajsinghtech
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
-    directory: Formula
+    directory: Casks
     commit_author:
       name: Raj Singh
       email: rajsinghcpre@gmail.com
     homepage: "https://github.com/rajsinghtech/tsopencode"
     description: "opencode on your Tailscale tailnet via tsnet — no system tailscaled required"
-    license: "MIT"
+    service: |
+      run [opt_bin/"tsopencode"]
+      keep_alive true
+      log_path var/"log/tsopencode.log"
+      error_log_path var/"log/tsopencode.log"
+      environment_variables PATH: std_service_path_env
+    caveats: |
+      First-time setup — authenticate your Tailscale node by running once:
+        TS_AUTHKEY=tskey-auth-... tsopencode
+      State persists to ~/.config/tsopencode/ — subsequent runs are headless.
+
+      To run as a background service (starts at login):
+        brew services start tsopencode
