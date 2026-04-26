@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"path/filepath"
+	"strings"
 
 	"tailscale.com/tsnet"
 )
@@ -23,13 +24,23 @@ func newTSNet(hostname, stateDir, authKey string) (*tsnetServer, error) {
 	return &tsnetServer{s: s}, nil
 }
 
-func (t *tsnetServer) Listen(ctx context.Context) (net.Listener, error) {
-	if _, err := t.s.Up(ctx); err != nil {
-		return nil, fmt.Errorf("tsnet up: %w", err)
+func (t *tsnetServer) Listen(ctx context.Context) (net.Listener, string, error) {
+	status, err := t.s.Up(ctx)
+	if err != nil {
+		return nil, "", fmt.Errorf("tsnet up: %w", err)
 	}
+	dnsName := strings.TrimSuffix(status.Self.DNSName, ".")
 	ln, err := t.s.ListenTLS("tcp", ":443")
 	if err != nil {
-		return nil, fmt.Errorf("tsnet listen: %w", err)
+		return nil, "", fmt.Errorf("tsnet listen: %w", err)
+	}
+	return ln, dnsName, nil
+}
+
+func (t *tsnetServer) ListenHTTP() (net.Listener, error) {
+	ln, err := t.s.Listen("tcp", ":80")
+	if err != nil {
+		return nil, fmt.Errorf("tsnet listen http: %w", err)
 	}
 	return ln, nil
 }

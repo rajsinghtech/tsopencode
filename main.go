@@ -54,18 +54,30 @@ func main() {
 	defer ts.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	ln, err := ts.Listen(ctx)
+	ln, dnsName, err := ts.Listen(ctx)
 	cancel() // startup context no longer needed
 	if err != nil {
 		log.Fatalf("tsnet listen: %v", err)
 	}
 
-	srv := &http.Server{Handler: newProxy(port)}
-	fmt.Printf("tsopencode %s — https://%s.<tailnet>.ts.net\n", Version, *hostname)
+	httpLn, err := ts.ListenHTTP()
+	if err != nil {
+		log.Fatalf("tsnet listen http: %v", err)
+	}
 
-	serveErr := make(chan error, 1)
+	proxy := newProxy(port)
+	srv := &http.Server{Handler: proxy}
+	httpSrv := &http.Server{Handler: proxy}
+	fmt.Printf("tsopencode %s\n  https://%s\n  http://%s\n", Version, dnsName, dnsName)
+
+	serveErr := make(chan error, 2)
 	go func() {
 		if err := srv.Serve(ln); err != nil && err != http.ErrServerClosed {
+			serveErr <- err
+		}
+	}()
+	go func() {
+		if err := httpSrv.Serve(httpLn); err != nil && err != http.ErrServerClosed {
 			serveErr <- err
 		}
 	}()
@@ -82,6 +94,9 @@ func main() {
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer shutdownCancel()
 	if err := srv.Shutdown(shutdownCtx); err != nil {
+		log.Printf("https shutdown: %v", err)
+	}
+	if err := httpSrv.Shutdown(shutdownCtx); err != nil {
 		log.Printf("http shutdown: %v", err)
 	}
 }
