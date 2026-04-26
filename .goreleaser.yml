@@ -60,12 +60,14 @@ homebrew_casks:
       email: rajsinghcpre@gmail.com
     homepage: "https://github.com/rajsinghtech/tsopencode"
     description: "opencode on your Tailscale tailnet via tsnet — no system tailscaled required"
-    service: |
-      run [opt_bin/"tsopencode"]
-      keep_alive true
-      log_path var/"log/tsopencode.log"
-      error_log_path var/"log/tsopencode.log"
-      environment_variables PATH: std_service_path_env
+    custom_block: |
+      service do
+        run opt_bin/"tsopencode"
+        keep_alive true
+        log_path var/"log/tsopencode.log"
+        error_log_path var/"log/tsopencode.log"
+        environment_variables PATH: std_service_path_env
+      end
     caveats: |
       First-time setup — authenticate your Tailscale node by running once:
         TS_AUTHKEY=tskey-auth-... tsopencode
