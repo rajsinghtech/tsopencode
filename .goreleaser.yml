@@ -31,9 +31,14 @@ release:
   header: |
     ## Installation
 
-    ### Homebrew
+    ### Homebrew (recommended)
     ```bash
     brew install rajsinghtech/tap/tsopencode
+    ```
+
+    ### Background service
+    ```bash
+    brew services start tsopencode
     ```
 
     ### Binary
