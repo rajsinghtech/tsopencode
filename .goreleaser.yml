@@ -1,0 +1,63 @@
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: tsopencode
+    main: .
+    binary: tsopencode
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - "-s -w"
+      - "-X main.Version={{.Version}}"
+
+archives:
+  - id: tsopencode
+    name_template: "{{ .Binary }}-{{ .Tag }}-{{ .Os }}-{{ .Arch }}"
+    files:
+      - LICENSE
+      - README.md
+
+release:
+  header: |
+    ## Installation
+
+    ### Homebrew
+    ```bash
+    brew install rajsinghtech/tap/tsopencode
+    ```
+
+    ### Binary
+    Download the binary for your platform from the assets below.
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+
+brews:
+  - name: tsopencode
+    ids:
+      - tsopencode
+    repository:
+      owner: rajsinghtech
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    commit_author:
+      name: Raj Singh
+      email: rajsinghcpre@gmail.com
+    homepage: "https://github.com/rajsinghtech/tsopencode"
+    description: "opencode on your Tailscale tailnet via tsnet — no system tailscaled required"
+    license: "MIT"
