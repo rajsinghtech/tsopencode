@@ -23,8 +23,8 @@ func newTSNet(hostname, stateDir, authKey string) (*tsnetServer, error) {
 	return &tsnetServer{s: s}, nil
 }
 
-func (t *tsnetServer) Listen() (net.Listener, error) {
-	if _, err := t.s.Up(context.Background()); err != nil {
+func (t *tsnetServer) Listen(ctx context.Context) (net.Listener, error) {
+	if _, err := t.s.Up(ctx); err != nil {
 		return nil, fmt.Errorf("tsnet up: %w", err)
 	}
 	ln, err := t.s.ListenTLS("tcp", ":443")
